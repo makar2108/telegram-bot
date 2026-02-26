@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaDocument, Message, InputFile
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaDocument, Message, InputFile, CallbackQuery
 from bs4 import BeautifulSoup
 import re
 try:
@@ -1119,7 +1119,7 @@ async def is_image_url(session: aiohttp.ClientSession, url: str) -> bool:
         return False
 
 # Анимация загрузки
-async def show_loading_animation(message: types.Message, media_type: str = 'медиа'):
+async def show_loading_animation(message: Message, media_type: str = 'медиа'):
     try:
         loading_msg = await message.reply(f"Загрузка {media_type}... {LOADING_EMOJIS[0]}", parse_mode='Markdown')
         if len(LOADING_EMOJIS) > 1:
@@ -1146,7 +1146,7 @@ def get_main_menu():
 
 # Команда /start
 @dp.message_handler(commands=['start'])
-async def send_welcome(message: types.Message):
+async def send_welcome(message: Message):
     user_id = message.from_user.id
     update_user_activity(user_id)
     await message.reply(
@@ -1160,7 +1160,7 @@ async def send_welcome(message: types.Message):
 
 # Команда /support
 @dp.message_handler(commands=['support'])
-async def send_support(message: types.Message):
+async def send_support(message: Message):
     user_id = message.from_user.id
     update_user_activity(user_id)
     await message.reply(
@@ -1175,7 +1175,7 @@ async def send_support(message: types.Message):
 
 # Команда /admin
 @dp.message_handler(commands=['admin'])
-async def admin_status(message: types.Message):
+async def admin_status(message: Message):
     user_id = message.from_user.id
     update_user_activity(user_id)
     if user_id != ADMIN_ID:
@@ -1190,7 +1190,7 @@ async def admin_status(message: types.Message):
 
 # Обработка текстовых сообщений (URL или HTML-код)
 @dp.message_handler(content_types=['text'])
-async def handle_html(message: types.Message):
+async def handle_html(message: Message):
     try:
         user_id = message.from_user.id
         update_user_activity(user_id)
@@ -1356,7 +1356,7 @@ async def handle_html(message: types.Message):
                                     buf = BytesIO()
                                     img.save(buf, format='JPEG', quality=90)
                                     buf.seek(0)
-                                    input_file = types.InputFile(buf, filename=f"photo_{i}.jpg")
+                                    input_file = InputFile(buf, filename=f"photo_{i}.jpg")
                                     media.append(InputMediaPhoto(media=input_file))
                                 except Exception as ce:
                                     logging.error(f"Конвертация в JPEG не удалась для фото {i}: {ce}")
@@ -1533,7 +1533,7 @@ async def handle_html(message: types.Message):
                 pass
 
 # Обработка видео по URL
-async def process_video_url(message: types.Message, video_url: str, loading_msg: types.Message):
+async def process_video_url(message: Message, video_url: str, loading_msg: Message):
     try:
         await loading_msg.edit_text("📥 Скачиваю видео...")
         
@@ -1644,7 +1644,7 @@ async def process_video_url(message: types.Message, video_url: str, loading_msg:
 
 # Обработка инлайн-кнопок
 @dp.callback_query_handler()
-async def process_callback(callback: types.CallbackQuery):
+async def process_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
     update_user_activity(user_id)
     action = callback.data
