@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaDocument, Message, InputFile, CallbackQuery
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaDocument, Message, InputFile, CallbackQuery, BufferedInputFile
 from aiogram.enums import ContentType
 from bs4 import BeautifulSoup
 import re
@@ -178,7 +178,7 @@ async def process_media_urls(message: Message, urls: list[str], loading_msg: Mes
                         buf = BytesIO()
                         img.save(buf, format='JPEG', quality=90)
                         buf.seek(0)
-                        media.append(InputMediaPhoto(media=InputFile(buf, filename=f"photo_{i}.jpg")))
+                        media.append(InputMediaPhoto(media=BufferedInputFile(buf.getvalue(), filename=f"photo_{i}.jpg")))
                         continue
                     except Exception as ce:
                         logging.error(f"Не удалось сконвертировать в JPEG {url}: {ce}")
@@ -205,14 +205,14 @@ async def process_media_urls(message: Message, urls: list[str], loading_msg: Mes
             await message.reply_photo(media[0].media, reply_markup=get_main_menu())
             for buf, fname in doc_fallbacks:
                 buf.seek(0)
-                await message.reply_document(InputFile(buf, filename=fname))
+                await message.reply_document(BufferedInputFile(buf.getvalue(), filename=fname))
             return
 
         if 2 <= len(media) <= 10:
             await message.reply_media_group(media)
             for buf, fname in doc_fallbacks:
                 buf.seek(0)
-                await message.reply_document(InputFile(buf, filename=fname))
+                await message.reply_document(BufferedInputFile(buf.getvalue(), filename=fname))
             return
 
         # Батчи
@@ -225,7 +225,7 @@ async def process_media_urls(message: Message, urls: list[str], loading_msg: Mes
                 logging.error(f"Ошибка отправки батча {(start//10)+1}: {e}")
         for buf, fname in doc_fallbacks:
             buf.seek(0)
-            await message.reply_document(InputFile(buf, filename=fname))
+            await message.reply_document(BufferedInputFile(buf.getvalue(), filename=fname))
     except Exception as e:
         logging.error(f"Ошибка process_media_urls: {e}")
 
@@ -1351,7 +1351,7 @@ async def handle_html(message: Message):
                                     buf = BytesIO()
                                     img.save(buf, format='JPEG', quality=90)
                                     buf.seek(0)
-                                    input_file = InputFile(buf, filename=f"photo_{i}.jpg")
+                                    input_file = BufferedInputFile(buf.getvalue(), filename=f"photo_{i}.jpg")
                                     media.append(InputMediaPhoto(media=input_file))
                                 except Exception as ce:
                                     logging.error(f"Конвертация в JPEG не удалась для фото {i}: {ce}")
@@ -1422,7 +1422,7 @@ async def handle_html(message: Message):
                     for idx, (buf, fname) in enumerate(doc_fallbacks, 1):
                         try:
                             buf.seek(0)
-                            await message.reply_document(InputFile(buf, filename=fname))
+                            await message.reply_document(BufferedInputFile(buf.getvalue(), filename=fname))
                             await asyncio.sleep(0.2)
                         except Exception as e:
                             logging.error(f"Ошибка отправки документа {idx}: {e}")
@@ -1449,7 +1449,7 @@ async def handle_html(message: Message):
                     for idx, (buf, fname) in enumerate(doc_fallbacks, 1):
                         try:
                             buf.seek(0)
-                            await message.reply_document(InputFile(buf, filename=fname))
+                            await message.reply_document(BufferedInputFile(buf.getvalue(), filename=fname))
                             await asyncio.sleep(0.2)
                         except Exception as e:
                             logging.error(f"Ошибка отправки документа {idx}: {e}")
