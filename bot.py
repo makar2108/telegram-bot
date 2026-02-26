@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
-from aiogram import Bot, Dispatcher, types
-from aiogram.utils.executor import start_polling
+from aiogram import Bot, Dispatcher, F
+from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaDocument
 from bs4 import BeautifulSoup
 import re
@@ -27,7 +27,7 @@ ADMIN_ID = 198711432
 
 # Инициализация бота
 bot = Bot(token=API_TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher()
 
 # Эмодзи для анимации загрузки
 LOADING_EMOJIS = ['⏳', '🕒', '🕓']
@@ -1699,8 +1699,12 @@ async def process_callback(callback: types.CallbackQuery):
 
     await callback.answer()
 
-async def on_startup(_):
+async def on_startup():
     logging.info('Бот запущен 🚀')
 
+async def main():
+    dp.startup.register(on_startup)
+    await dp.start_polling(bot, skip_updates=True)
+
 if __name__ == '__main__':
-    start_polling(dp, skip_updates=True, on_startup=on_startup)
+    asyncio.run(main())
