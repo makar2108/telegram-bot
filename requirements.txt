@@ -4,3 +4,4 @@ beautifulsoup4==4.12.3
 playwright==1.48.0
 urllib3==2.2.3
 certifi==2024.8.30
+Pillow==10.3.0
