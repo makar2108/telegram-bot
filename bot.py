@@ -72,12 +72,11 @@ def get_user_stats():
 
 # Меню админ-панели
 def get_admin_menu():
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton("📊 Статистика пользователей", callback_data="admin_stats"),
-        InlineKeyboardButton("🚀 Статус бота", callback_data="admin_status"),
-        InlineKeyboardButton("🔙 Главное меню", callback_data="main_menu")
-    )
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton("📊 Статистика пользователей", callback_data="admin_stats")],
+        [InlineKeyboardButton("🚀 Статус бота", callback_data="admin_status")],
+        [InlineKeyboardButton("🔙 Главное меню", callback_data="main_menu")]
+    ])
     return keyboard
 
 # Попытка скачать изображение в альтернативном формате (например, вместо .webp — .jpg/.jpeg/.png)
@@ -1138,11 +1137,10 @@ async def show_loading_animation(message: Message, media_type: str = 'медиа
 
 # Главное меню
 def get_main_menu():
-    keyboard = InlineKeyboardMarkup(row_width=1)
-    keyboard.add(
-        InlineKeyboardButton("Отправить HTML-код 📄", callback_data="send_html"),
-        InlineKeyboardButton("Поддержка 🌟", callback_data="support")
-    )
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton("Отправить HTML-код 📄", callback_data="send_html")],
+        [InlineKeyboardButton("Поддержка 🌟", callback_data="support")]
+    ])
     return keyboard
 
 # Команда /start
