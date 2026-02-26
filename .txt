@@ -1,0 +1,14 @@
+После установки в PowerShell:
+powershell
+py -m ensurepip --upgrade
+Создать окружение и поставить зависимости:
+powershell
+py -m venv .venv
+.\.venv\Scripts\python -m pip install --upgrade pip
+.\.venv\Scripts\pip install -r requirements.txt
+Установить браузер для Playwright:
+powershell
+.\.venv\Scripts\python -m playwright install chromium
+Запустить бота:
+powershell
+.\.venv\Scripts\python .\bot.py
