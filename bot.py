@@ -1317,8 +1317,7 @@ async def handle_html(message: Message):
             return
         
         # Скачиваем фотографии
-        media = []  # только фото для альбомов
-        doc_fallbacks = []  # документы для кейсов без конвертации
+        media = []  # только фото для альбомов (все конвертируем в JPEG)
         success_count = 0
         error_count = 0
         
@@ -1353,34 +1352,15 @@ async def handle_html(message: Message):
                                     buf.seek(0)
                                     input_file = BufferedInputFile(buf.getvalue(), filename=f"photo_{i}.jpg")
                                     media.append(InputMediaPhoto(media=input_file))
+                                    success_count += 1
+                                    logging.info(f"Успешно добавлено фото {i} (конвертировано в JPEG)")
                                 except Exception as ce:
                                     logging.error(f"Конвертация в JPEG не удалась для фото {i}: {ce}")
-                                    photo_data.seek(0)
-                                    copy_buf = BytesIO(photo_data.read())
-                                    copy_buf.seek(0)
-                                    # Фолбэк: отправим как документ с исходным расширением
-                                    try:
-                                        ext = '.jpg'
-                                        m = re.search(r"\.([a-z0-9]{3,4})(?:\?|$)", url.lower())
-                                        if m:
-                                            ext = '.' + m.group(1)
-                                    except Exception:
-                                        ext = '.jpg'
-                                    doc_fallbacks.append((copy_buf, f"photo_{i}{ext}"))
+                                    error_count += 1  # Пропускаем фото, если не удалось конвертировать
                             else:
-                                photo_data.seek(0)
-                                copy_buf = BytesIO(photo_data.read())
-                                copy_buf.seek(0)
-                                try:
-                                    ext = '.jpg'
-                                    m = re.search(r"\.([a-z0-9]{3,4})(?:\?|$)", url.lower())
-                                    if m:
-                                        ext = '.' + m.group(1)
-                                except Exception:
-                                    ext = '.jpg'
-                                doc_fallbacks.append((copy_buf, f"photo_{i}{ext}"))
-                            success_count += 1
-                            logging.info(f"Успешно добавлено фото {i}")
+                                # Если PIL не доступен, пропускаем фото
+                                error_count += 1
+                                logging.error(f"PIL не доступен, пропускаем фото {i}")
                         else:
                             error_count += 1
                             logging.error(f"Фото {i} имеет нулевой размер")
@@ -1418,18 +1398,9 @@ async def handle_html(message: Message):
                     # Если найдено несколько фото, отправляем как альбом
                     logging.info(f"Отправка альбома из {len(media)} фото")
                     await message.reply_media_group(media)
-                    # Отправляем документы-фолбэки (если есть)
-                    for idx, (buf, fname) in enumerate(doc_fallbacks, 1):
-                        try:
-                            buf.seek(0)
-                            await message.reply_document(BufferedInputFile(buf.getvalue(), filename=fname))
-                            await asyncio.sleep(0.2)
-                        except Exception as e:
-                            logging.error(f"Ошибка отправки документа {idx}: {e}")
                     await message.reply(
                         f"✅ Скачано {len(media)} фотографий!\n"
-                        f"Источник: {content[:50]}...\n"
-                        f"Документов (fallback): {len(doc_fallbacks)}",
+                        f"Источник: {content[:50]}...",
                         reply_markup=get_main_menu()
                     )
                     logging.info(f"Успешно отправлен альбом из {len(media)} фото")
@@ -1445,18 +1416,9 @@ async def handle_html(message: Message):
                             await asyncio.sleep(0.5)
                         except Exception as e:
                             logging.error(f"Ошибка отправки батча {start//10+1}: {e}")
-                    # Отправляем документы-фолбэки (если есть)
-                    for idx, (buf, fname) in enumerate(doc_fallbacks, 1):
-                        try:
-                            buf.seek(0)
-                            await message.reply_document(BufferedInputFile(buf.getvalue(), filename=fname))
-                            await asyncio.sleep(0.2)
-                        except Exception as e:
-                            logging.error(f"Ошибка отправки документа {idx}: {e}")
                     await message.reply(
                         f"✅ Скачано и отправлено {total} фотографий!\n"
-                        f"Источник: {content[:50]}...\n"
-                        f"Документов (fallback): {len(doc_fallbacks)}",
+                        f"Источник: {content[:50]}...",
                         reply_markup=get_main_menu()
                     )
                     logging.info("Успешно отправлены все батчи фото")
