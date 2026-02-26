@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaDocument
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaDocument, Message, InputFile
 from bs4 import BeautifulSoup
 import re
 try:
@@ -101,7 +101,7 @@ async def fetch_alt_image_format(session: aiohttp.ClientSession, url: str) -> By
     return None
 
 # Отправка списка URL с фото (фильтрация, скачивание, конвертация, батчи)
-async def process_media_urls(message: types.Message, urls: list[str], loading_msg: types.Message, source_hint: str = ""):
+async def process_media_urls(message: Message, urls: list[str], loading_msg: Message, source_hint: str = ""):
     try:
         # Спец-фильтрация для easyhata
         photo_urls = []
@@ -178,7 +178,7 @@ async def process_media_urls(message: types.Message, urls: list[str], loading_ms
                         buf = BytesIO()
                         img.save(buf, format='JPEG', quality=90)
                         buf.seek(0)
-                        media.append(InputMediaPhoto(media=types.InputFile(buf, filename=f"photo_{i}.jpg")))
+                        media.append(InputMediaPhoto(media=InputFile(buf, filename=f"photo_{i}.jpg")))
                         continue
                     except Exception as ce:
                         logging.error(f"Не удалось сконвертировать в JPEG {url}: {ce}")
@@ -205,14 +205,14 @@ async def process_media_urls(message: types.Message, urls: list[str], loading_ms
             await message.reply_photo(media[0].media, reply_markup=get_main_menu())
             for buf, fname in doc_fallbacks:
                 buf.seek(0)
-                await message.reply_document(types.InputFile(buf, filename=fname))
+                await message.reply_document(InputFile(buf, filename=fname))
             return
 
         if 2 <= len(media) <= 10:
             await message.reply_media_group(media)
             for buf, fname in doc_fallbacks:
                 buf.seek(0)
-                await message.reply_document(types.InputFile(buf, filename=fname))
+                await message.reply_document(InputFile(buf, filename=fname))
             return
 
         # Батчи
@@ -225,7 +225,7 @@ async def process_media_urls(message: types.Message, urls: list[str], loading_ms
                 logging.error(f"Ошибка отправки батча {(start//10)+1}: {e}")
         for buf, fname in doc_fallbacks:
             buf.seek(0)
-            await message.reply_document(types.InputFile(buf, filename=fname))
+            await message.reply_document(InputFile(buf, filename=fname))
     except Exception as e:
         logging.error(f"Ошибка process_media_urls: {e}")
 
@@ -371,7 +371,7 @@ async def extract_potential_urls(url: str) -> list:
             # Получаем HTML после выполнения JavaScript
             # Дополнительно собираем ссылки на изображения напрямую из DOM через JS
             try:
-                dom_urls = await page.evaluate('''() => {
+                dom_urls = await page.evaluate(r'''() => {
                     const urls = new Set();
                     const add = (u) => {
                         if (!u) return;
@@ -533,7 +533,7 @@ async def extract_potential_urls(url: str) -> list:
                 }''')
                 await page.wait_for_timeout(500)
                 # Собираем дополнительные изображения из популярных контейнеров
-                extra_dom_urls = await page.evaluate('''() => {
+                extra_dom_urls = await page.evaluate(r'''() => {
                     const urls = new Set();
                     const add = u => { if (u) urls.add(String(u)); };
                     const collect = root => {
@@ -569,7 +569,7 @@ async def extract_potential_urls(url: str) -> list:
 
             # Попытка извлечь изображения из JSON в script-тегах (встроенные галереи)
             try:
-                json_urls = await page.evaluate('''() => {
+                json_urls = await page.evaluate(r'''() => {
                     const out = [];
                     const push = u => { if (u) out.push(String(u)); };
                     const scripts = Array.from(document.querySelectorAll('script'));
@@ -1427,7 +1427,7 @@ async def handle_html(message: types.Message):
                     for idx, (buf, fname) in enumerate(doc_fallbacks, 1):
                         try:
                             buf.seek(0)
-                            await message.reply_document(types.InputFile(buf, filename=fname))
+                            await message.reply_document(InputFile(buf, filename=fname))
                             await asyncio.sleep(0.2)
                         except Exception as e:
                             logging.error(f"Ошибка отправки документа {idx}: {e}")
@@ -1454,7 +1454,7 @@ async def handle_html(message: types.Message):
                     for idx, (buf, fname) in enumerate(doc_fallbacks, 1):
                         try:
                             buf.seek(0)
-                            await message.reply_document(types.InputFile(buf, filename=fname))
+                            await message.reply_document(InputFile(buf, filename=fname))
                             await asyncio.sleep(0.2)
                         except Exception as e:
                             logging.error(f"Ошибка отправки документа {idx}: {e}")
