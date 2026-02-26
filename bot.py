@@ -73,9 +73,9 @@ def get_user_stats():
 # Меню админ-панели
 def get_admin_menu():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton("📊 Статистика пользователей", callback_data="admin_stats")],
-        [InlineKeyboardButton("🚀 Статус бота", callback_data="admin_status")],
-        [InlineKeyboardButton("🔙 Главное меню", callback_data="main_menu")]
+        [InlineKeyboardButton(text="📊 Статистика пользователей", callback_data="admin_stats")],
+        [InlineKeyboardButton(text="🚀 Статус бота", callback_data="admin_status")],
+        [InlineKeyboardButton(text="🔙 Главное меню", callback_data="main_menu")]
     ])
     return keyboard
 
@@ -1138,8 +1138,8 @@ async def show_loading_animation(message: Message, media_type: str = 'медиа
 # Главное меню
 def get_main_menu():
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton("Отправить HTML-код 📄", callback_data="send_html")],
-        [InlineKeyboardButton("Поддержка 🌟", callback_data="support")]
+        [InlineKeyboardButton(text="Отправить HTML-код 📄", callback_data="send_html")],
+        [InlineKeyboardButton(text="Поддержка 🌟", callback_data="support")]
     ])
     return keyboard
 
