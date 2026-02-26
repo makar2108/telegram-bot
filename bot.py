@@ -3,6 +3,7 @@ import aiohttp
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InputMediaDocument, Message, InputFile, CallbackQuery
+from aiogram.enums import ContentType
 from bs4 import BeautifulSoup
 import re
 try:
@@ -1145,7 +1146,6 @@ def get_main_menu():
     return keyboard
 
 # Команда /start
-@dp.message_handler(commands=['start'])
 async def send_welcome(message: Message):
     user_id = message.from_user.id
     update_user_activity(user_id)
@@ -1159,7 +1159,6 @@ async def send_welcome(message: Message):
     )
 
 # Команда /support
-@dp.message_handler(commands=['support'])
 async def send_support(message: Message):
     user_id = message.from_user.id
     update_user_activity(user_id)
@@ -1174,7 +1173,6 @@ async def send_support(message: Message):
     )
 
 # Команда /admin
-@dp.message_handler(commands=['admin'])
 async def admin_status(message: Message):
     user_id = message.from_user.id
     update_user_activity(user_id)
@@ -1189,7 +1187,6 @@ async def admin_status(message: Message):
     )
 
 # Обработка текстовых сообщений (URL или HTML-код)
-@dp.message_handler(content_types=['text'])
 async def handle_html(message: Message):
     try:
         user_id = message.from_user.id
@@ -1643,7 +1640,6 @@ async def process_video_url(message: Message, video_url: str, loading_msg: Messa
             logging.error(f"Ошибка при отправке сообщения об ошибке: {str(e2)}")
 
 # Обработка инлайн-кнопок
-@dp.callback_query_handler()
 async def process_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
     update_user_activity(user_id)
@@ -1698,6 +1694,13 @@ async def process_callback(callback: CallbackQuery):
         )
 
     await callback.answer()
+
+# Register handlers
+dp.message.register(send_welcome, commands=['start'])
+dp.message.register(send_support, commands=['support'])
+dp.message.register(admin_status, commands=['admin'])
+dp.message.register(handle_html, content_types=[ContentType.TEXT])
+dp.callback_query.register(process_callback)
 
 async def on_startup():
     logging.info('Бот запущен 🚀')
