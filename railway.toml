@@ -1,2 +1,3 @@
 [build]
+builder = "NIXPACKS"
 python_version = "3.12"
