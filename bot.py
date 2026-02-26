@@ -147,7 +147,6 @@ async def process_media_urls(message: Message, urls: list[str], loading_msg: Mes
             return
 
         media: list[InputMediaPhoto] = []
-        doc_fallbacks: list[tuple[BytesIO, str]] = []
         async with aiohttp.ClientSession() as session:
             for i, url in enumerate(photo_urls, 1):
                 photo_data, error = await download_media(url, session)
@@ -182,18 +181,10 @@ async def process_media_urls(message: Message, urls: list[str], loading_msg: Mes
                         continue
                     except Exception as ce:
                         logging.error(f"Не удалось сконвертировать в JPEG {url}: {ce}")
-                        # пойдём во фолбэк ниже
-                # Фолбэк: отправим как документ с исходным расширением
-                try:
-                    ext = '.jpg'
-                    m = re.search(r"\.([a-z0-9]{3,4})(?:\?|$)", url.lower())
-                    if m:
-                        ext = '.' + m.group(1)
-                except Exception:
-                    ext = '.jpg'
-                photo_data.seek(0)
-                c = BytesIO(photo_data.read()); c.seek(0)
-                doc_fallbacks.append((c, f"photo_{i}{ext}"))
+                        # Пропускаем фото, если не удалось конвертировать
+                else:
+                    # Если PIL не доступен, пропускаем фото
+                    logging.error(f"PIL не доступен, пропускаем фото {i}")
 
         if loading_msg:
             try:
@@ -203,16 +194,10 @@ async def process_media_urls(message: Message, urls: list[str], loading_msg: Mes
 
         if len(media) == 1:
             await message.reply_photo(media[0].media, reply_markup=get_main_menu())
-            for buf, fname in doc_fallbacks:
-                buf.seek(0)
-                await message.reply_document(BufferedInputFile(buf.getvalue(), filename=fname))
             return
 
         if 2 <= len(media) <= 10:
             await message.reply_media_group(media)
-            for buf, fname in doc_fallbacks:
-                buf.seek(0)
-                await message.reply_document(BufferedInputFile(buf.getvalue(), filename=fname))
             return
 
         # Батчи
@@ -223,9 +208,6 @@ async def process_media_urls(message: Message, urls: list[str], loading_msg: Mes
                 await asyncio.sleep(0.4)
             except Exception as e:
                 logging.error(f"Ошибка отправки батча {(start//10)+1}: {e}")
-        for buf, fname in doc_fallbacks:
-            buf.seek(0)
-            await message.reply_document(BufferedInputFile(buf.getvalue(), filename=fname))
     except Exception as e:
         logging.error(f"Ошибка process_media_urls: {e}")
 
