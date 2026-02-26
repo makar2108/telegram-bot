@@ -1696,10 +1696,10 @@ async def process_callback(callback: CallbackQuery):
     await callback.answer()
 
 # Register handlers
-dp.message.register(send_welcome, commands=['start'])
-dp.message.register(send_support, commands=['support'])
-dp.message.register(admin_status, commands=['admin'])
-dp.message.register(handle_html, content_types=[ContentType.TEXT])
+dp.message.register(send_welcome, Command(commands=['start']))
+dp.message.register(send_support, Command(commands=['support']))
+dp.message.register(admin_status, Command(commands=['admin']))
+dp.message.register(handle_html, F.content_type == ContentType.TEXT)
 dp.callback_query.register(process_callback)
 
 async def on_startup():
